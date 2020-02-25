@@ -1,0 +1,7 @@
+include README.md
+include LICENSE.txt
+recursive-include examples *.py *.c pin.conf README.md
+exclude run.sh
+include tests/tests.py
+include tests/pin.conf
+include tests/pin_conf_test/pin.conf

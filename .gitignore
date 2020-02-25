@@ -1,0 +1,5 @@
+.idea
+*.pyc
+examples/*/run.sh
+run.sh
+c_cov.sh
