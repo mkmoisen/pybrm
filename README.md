@@ -80,7 +80,7 @@ Create an array in one shot, the preferred way with dict syntax `{}`. The keys a
         16: {'PIN_FLD_STATUS': 5},
     }
 
-Let's print if again:
+Let's print it again:
 
     >>> print(f)
     # number of field entries allocated 20, used 9
@@ -95,6 +95,8 @@ Let's print if again:
     1     PIN_FLD_STATUS         ENUM [0] 3
     0 PIN_FLD_ARGS          ARRAY [4] allocated 20, used 1
     1     PIN_FLD_STATUS         ENUM [0] 4
+    0 PIN_FLD_ARGS          ARRAY [16] allocated 20, used 1
+    1     PIN_FLD_STATUS         ENUM [0] 5    
 
 You can instead use list syntax `[]`, and not specify the elem_ids. This will automatically start the elem_id off at 0 and increase it by one for each flist.
 
