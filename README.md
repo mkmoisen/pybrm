@@ -33,12 +33,24 @@ Set some scalar data on the flist:
     f['PIN_FLD_STATUS'] = 1
     f['PIN_FLD_CREATED_T'] = datetime.now()  # you can also set it to an integer
 
+Or if you prefer `flist.FIELD` notation:
+
+    f.PIN_FLD_POID = '/account'  # type /account, id -1, revision 0
+    f.PIN_FLD_STATUS = 1
+    f.PIN_FLD_CREATED_T = datetime.now()  # you can also set it to an integer
+
 Create a substructure in one shot, the preferred way:
 
     f['PIN_FLD_INHERITED_INFO'] = {
         'PIN_FLD_POID': ('/service', 1234), # type service, id 1234, revision 0
         'PIN_FLD_STATUS': 2,
     }
+
+Or if you prefer `flist.FIELD` notation:
+
+    f.PIN_FLD_INHERITED_INFO = {}
+    f.PIN_FLD_INHERITED_INFO.PIN_FLD_POID = ('/service', 1234), # type service, id 1234, revision 0
+    f.PIN_FLD_INHERITED_INFO.PIN_FLD_STATUS = 2
 
 Print the flist:
 
@@ -58,6 +70,15 @@ You can also build up a substruct it up piece by piece:
     # You can pull a subsctruct out into its own variable if you like
     substruct = f['PIN_FLD_EVENT']
     substruct['PIN_FLD_STATUS'] = 3
+
+which is equivalent to:
+
+    f.PIN_FLD_EVENT = {}
+    f.PIN_FLD_EVENT.PIN_FLD_POID = ('/service', 1234, 1)  # type service, id 1234, revision 1
+
+    # You can pull a subsctruct out into its own variable if you like
+    substruct = f.PIN_FLD_EVENT
+    substruct.PIN_FLD_STATUS = 3
 
 Let's print it again:
 
@@ -105,6 +126,12 @@ You can instead use list syntax `[]`, and not specify the elem_ids. This will au
         {'PIN_FLD_STATUS': 7},  # sets at elem_id 1 
     ]
 
+or
+
+    f.PIN_FLD_RESULTS = [{}, {}]
+    f.PIN_FLD_RESULTS[0].PIN_FLD_STATUS = 6
+    f.PIN_FLD_RESULTS[1].PIN_FLD_STATUS = 7
+
 Let's print it again:
 
     >>> print(f)
@@ -136,6 +163,17 @@ You can also build up an array piece by piece:
     array = f['PIN_FLD_VALUES']
     array[1] = {}  # Create empty flist on the 1st elem_id of this array
     array[1]['PIN_FLD_STATUS'] = 9  # set one field on the flist we just created
+
+alternatively:
+
+    f.PIN_FLD_VALUES = {}  #  Creates an empty array
+    f.PIN_FLD_VALUES[0] = {'PIN_FLD_STATUS': 8}  # Adds an flist on the 0th elem_id of this array
+
+    # You can pull an array out into its own variable if you like
+    array = f.PIN_FLD_VALUES
+    array[1] = {}  # Create empty flist on the 1st elem_id of this array
+    array[1].PIN_FLD_STATUS = 9  # set one field on the flist we just created
+
 
 Let's print it again:
 
@@ -217,7 +255,7 @@ Get some data off the flist:
     status = f['PIN_FLD_STATUS']
     assert status == 1
     
-    poid = f['PIN_FLD_POID']
+    poid = f.PIN_FLD_POID
     assert poid.type == '/account'
     assert poid.id == -1
     assert poid.revision == 0
@@ -225,7 +263,7 @@ Get some data off the flist:
     
     assert f['PIN_FLD_INHERITED_INFO']['PIN_FLD_POID'].type == '/service'
     assert len(f['PIN_FLD_VALUES']) == 2
-    assert f['PIN_FLD_VALUES'][0]['PIN_FLD_STATUS'] == 8
+    assert f.PIN_FLD_VALUES[0].PIN_FLD_STATUS == 8
 
 Get the length:
 
@@ -237,9 +275,9 @@ Get the length:
     assert len(f['PIN_FLD_INHERITED_INFO']) == 2  # count of a substruct
     assert f['PIN_FLD_INHERITED_INFO'].count() == 2 # same as len
     
-    assert len(f['PIN_FLD_VALUES']) == 2  # count of an array
-    assert f['PIN_FLD_VALUES'].count() == 2  # same as len
     
+    assert len(f.PIN_FLD_VALUES) == 2  # count of an array
+    assert f.PIN_FLD_VALUES.count() == 2  # same as len
 
 Get all the field names:
 
@@ -260,13 +298,13 @@ Check if a field exists on our flist:
 Get an flist at a particular elem_id from an array:
 
     child = f['PIN_FLD_VALUES'][0]
-    child = f['PIN_FLD_VALUES'][1]
+    child = f.PIN_FLD_VALUES[1]
 
 Get any flist from an array (PIN_ELEMID_ANY):
 
     child = f['PIN_FLD_VALUES']['*']
     # This is equivalent
-    child = f['PIN_FLD_VALUES']['PIN_ELEMID_ANY']
+    child = f.PIN_FLD_VALUES['PIN_ELEMID_ANY']
     # This is also equivalent
     child = f['PIN_FLD_VALUES'][-1]
 
@@ -275,6 +313,10 @@ Delete a field:
     assert 'PIN_FLD_STATUS' in f
     del f['PIN_FLD_STATUS']
     assert 'PIN_FLD_STATUS' not in f
+
+    assert 'PIN_FLD_VALUES' in f
+    del f.PIN_FLD_VALUES
+    assert 'PIN_FLD_VALUES' not in f
 
 # Searching Shortcuts for PCM_OP_SEARCH
 
