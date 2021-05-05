@@ -1219,6 +1219,9 @@ class FList:
     def __iter__(self):
         yield from self._flist.init_iter()
 
+    def __dir__(self):
+        return super().__dir__() + list(self.keys())
+
     def items(self):
         """Returns the (key, values) of this flist"""
         for name in self:
