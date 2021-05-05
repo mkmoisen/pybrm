@@ -49,7 +49,7 @@ Create a substructure in one shot, the preferred way:
 Or if you prefer `flist.FIELD` notation:
 
     f.PIN_FLD_INHERITED_INFO = {}
-    f.PIN_FLD_INHERITED_INFO.PIN_FLD_POID = ('/service', 1234), # type service, id 1234, revision 0
+    f.PIN_FLD_INHERITED_INFO.PIN_FLD_POID = ('/service', 1234) # type service, id 1234, revision 0
     f.PIN_FLD_INHERITED_INFO.PIN_FLD_STATUS = 2
 
 Print the flist:
