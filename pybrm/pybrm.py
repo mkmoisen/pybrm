@@ -512,6 +512,7 @@ class Client:
 
 
 class FList:
+    __slots__ = ['client', '_flist', '_virtual_arrays']
     """
     Wrapper for a BRM flist
     To instantiate, call `client.flist()`; do not call `FList()` directly
