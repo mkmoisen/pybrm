@@ -46,6 +46,7 @@ from pybrm import pin_field_get_name, pin_field_get_type, pin_field_of_name, pin
 from pybrm import constants, pin_conf
 from datetime import datetime
 import unittest
+from unittest.mock import Mock
 from decimal import Decimal
 import sys
 import logging
@@ -2028,8 +2029,8 @@ class TestSearch(TestBrm):
             return 1
 
         def search_build_flist(*args, **kwargs):
-            flist = _search_build_flist(*args, **kwargs)
-            flist.opcode = opcode
+            flist = Mock(_search_build_flist(*args, **kwargs))
+            flist.side_effect = opcode
             return flist
 
         c.search_build_flist = search_build_flist
@@ -2053,8 +2054,8 @@ class TestSearch(TestBrm):
             return {'PIN_FLD_RESULTS': Fake()}
 
         def search_build_flist(*args, **kwargs):
-            flist = _search_build_flist(*args, **kwargs)
-            flist.opcode = opcode
+            flist = Mock(_search_build_flist(*args, **kwargs))
+            flist.side_effect = opcode
             return flist
 
         c.search_build_flist = search_build_flist
