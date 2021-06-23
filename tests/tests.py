@@ -46,6 +46,7 @@ from pybrm import pin_field_get_name, pin_field_get_type, pin_field_of_name, pin
 from pybrm import constants, pin_conf
 from datetime import datetime
 import unittest
+from unittest.mock import Mock
 from decimal import Decimal
 import sys
 import logging
@@ -77,10 +78,12 @@ class TestAddFields(TestBrm):
         self.assertRaises(KeyError, f._set_poid, 'not_real', 'abc')
         self.assertRaises(KeyError, f._set_str, 'not_real', 'abc')
         self.assertRaises(KeyError, f._set_tstamp, 'not_real', 123)
+        self.assertRaises(AttributeError, f.__setattr__, 'not_real', 'abc')
 
     def test_PIN_FLD_POID(self):
         f = self.c.flist()
         self.assertRaises(TypeError, f.__setitem__, 'PIN_FLD_POID', 123)
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_POID', 123)
         f._set_poid('PIN_FLD_POID', '/event/pybrm')
         s = str(f)
         print(s)
@@ -109,6 +112,30 @@ class TestAddFields(TestBrm):
         self.assertEquals(f['PIN_FLD_POID'].database, 3)
         self.assertRaises(TypeError, f.__setitem__, 'PIN_FLD_POID', ('/account', 2, 100, 3, 5))
 
+    def test_attr_poid_tuple_set(self):
+        f = self.c.flist()
+        f.PIN_FLD_POID = '/account',
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, -1)
+        self.assertEquals(f.PIN_FLD_POID.revision, 0)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '/account', 2
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 0)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '/account', 2, 100
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 100)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '/account', 2, 100, 3
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 100)
+        self.assertEquals(f.PIN_FLD_POID.database, 3)
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_POID', ('/account', 2, 100, 3, 5))
+
     def test_poid_real_poid_string(self):
         f = self.c.flist()
         f['PIN_FLD_POID'] = '0.0.0.1 /account -1 0'
@@ -132,10 +159,35 @@ class TestAddFields(TestBrm):
         self.assertEquals(f['PIN_FLD_POID'].revision, 100)
         self.assertEquals(f['PIN_FLD_POID'].database, 3)
 
+    def test_attr_poid_real_poid_string(self):
+        f = self.c.flist()
+        f.PIN_FLD_POID = '0.0.0.1 /account -1 0'
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, -1)
+        self.assertEquals(f.PIN_FLD_POID.revision, 0)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '0.0.0.1 /account 2 0'
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 0)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '0.0.0.1 /account 2 100'
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 100)
+        self.assertEquals(f.PIN_FLD_POID.database, 1)
+        f.PIN_FLD_POID = '0.0.0.3 /account 2 100'
+        self.assertEquals(f.PIN_FLD_POID.type, '/account')
+        self.assertEquals(f.PIN_FLD_POID.id, 2)
+        self.assertEquals(f.PIN_FLD_POID.revision, 100)
+        self.assertEquals(f.PIN_FLD_POID.database, 3)
+
     def test_poid_real_poid_string_error(self):
         f = self.c.flist()
         self.assertRaises(ValueError, f.__setitem__, 'PIN_FLD_POID', 'abcd /account -1 0')
         self.assertRaises(ValueError, f.__setitem__, 'PIN_FLD_POID', '0.0.0.1 /account abcd 0')
+        self.assertRaises(ValueError, f.__setattr__, 'PIN_FLD_POID', 'abcd /account -1 0')
+        self.assertRaises(ValueError, f.__setattr__, 'PIN_FLD_POID', '0.0.0.1 /account abcd 0')
         # this next one actually doesn't fail, instead it sets revision to 0
         #self.assertRaises(ValueError, f.__setitem__, 'PIN_FLD_POID', '0.0.0.1 /account -1 abcd')
 
@@ -149,6 +201,7 @@ class TestAddFields(TestBrm):
     def test_PIN_FLD_SERVICE_OBJ(self):
         f = self.c.flist()
         self.assertRaises(TypeError, f.__setitem__, 'PIN_FLD_SERVICE_OBJ', 123)
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_SERVICE_OBJ', 123)
         f._set_poid('PIN_FLD_SERVICE_OBJ', '/service/pybrm')
         s = str(f)
         print(s)
@@ -160,6 +213,16 @@ class TestAddFields(TestBrm):
         self.assertEquals(f['PIN_FLD_CREATED_T'].timestamp(), 1)
         f['PIN_FLD_CREATED_T'] = int(datetime.now().timestamp())
         f['PIN_FLD_CREATED_T'] = datetime.now()
+        s = str(f)
+        print(s)
+
+    def test_attr_PIN_FLD_CREATED_T(self):
+        f = self.c.flist()
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_CREATED_T', "hello")
+        f.PIN_FLD_CREATED_T = 1.9
+        self.assertEquals(f.PIN_FLD_CREATED_T.timestamp(), 1)
+        f.PIN_FLD_CREATED_T = int(datetime.now().timestamp())
+        f.PIN_FLD_CREATED_T = datetime.now()
         s = str(f)
         print(s)
 
@@ -202,6 +265,13 @@ class TestAddFields(TestBrm):
         f['PIN_FLD_SELECTOR'] = None
         self.assertEqual(f['PIN_FLD_SELECTOR'], None)
 
+    def test_attr_buf(self):
+        f = self.c.flist()
+        f.PIN_FLD_SELECTOR = b'abc'
+        self.assertEqual(f.PIN_FLD_SELECTOR, b'abc')
+        f.PIN_FLD_SELECTOR = None
+        self.assertEqual(f.PIN_FLD_SELECTOR, None)
+
     def test_str_compact(self):
         f = self.c.flist()
         f._set_poid('PIN_FLD_POID', '/event/pybrm')
@@ -220,6 +290,19 @@ class TestAddFields(TestBrm):
         s = str(f)
         print(s)
 
+    def test_attr_PIN_FLD_QUANTITY(self):
+        f = self.c.flist()
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_QUANTITY', "hello")
+        f.PIN_FLD_QUANTITY = "1.0"
+        f.PIN_FLD_QUANTITY = "1.5"
+        f.PIN_FLD_QUANTITY = 1
+        f.PIN_FLD_QUANTITY = 1.0
+        f.PIN_FLD_QUANTITY = 1.5
+        f.PIN_FLD_QUANTITY = Decimal('1.0')
+        f.PIN_FLD_QUANTITY = Decimal('1.5')
+        s = str(f)
+        print(s)
+
     def test_add(self):
         f = self.c.flist()
         f['PIN_FLD_POID'] = '/a'
@@ -231,6 +314,17 @@ class TestAddFields(TestBrm):
         self.assertNotIn('PIN_FLD_QUANTITY', f)
         self.assertNotIn('PIN_FLD_POID', f2)
 
+    def test_attr_add(self):
+        f = self.c.flist()
+        f.PIN_FLD_POID = '/a'
+        f2 = self.c.flist()
+        f2.PIN_FLD_QUANTITY = 1
+        f3 = f + f2
+        self.assertEquals(f3.PIN_FLD_POID.type, '/a')
+        self.assertEquals(f3.PIN_FLD_QUANTITY, 1)
+        self.assertNotIn('PIN_FLD_QUANTITY', f)
+        self.assertNotIn('PIN_FLD_POID', f2)
+
     def test_concat(self):
         f = self.c.flist()
         f['PIN_FLD_POID'] = '/a'
@@ -239,6 +333,16 @@ class TestAddFields(TestBrm):
         f._concat(f2)
         self.assertEquals(f['PIN_FLD_QUANTITY'], 1)
         self.assertEquals(f['PIN_FLD_POID'].type, '/a')
+        self.assertNotIn('PIN_FLD_POID', f2)
+
+    def test_attr_concat(self):
+        f = self.c.flist()
+        f.PIN_FLD_POID = '/a'
+        f2 = self.c.flist()
+        f2.PIN_FLD_QUANTITY = 1
+        f._concat(f2)
+        self.assertEquals(f.PIN_FLD_QUANTITY, 1)
+        self.assertEquals(f.PIN_FLD_POID.type, '/a')
         self.assertNotIn('PIN_FLD_POID', f2)
 
     def test_concat_and_iterate(self):
@@ -420,6 +524,63 @@ class TestFlist(TestBrm):
         self.assertEqual(flist['PIN_FLD_POID'], None)
 
         del flist['PIN_FLD_POID']
+        self.assertRaises(KeyError, flist.__getitem__, 'PIN_FLD_POID')
+
+        self.assertRaises(BRMError, flist._flist.set_poid, pin_field_of_name('PIN_FLD_POID'), value='foo')
+
+    def test_attr_get_poid(self):
+        flist = self.c.flist()
+        flist.PIN_FLD_POID = '/event/pybrm'
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, -1)
+        self.assertEqual(poid.revision, 0)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, -1)
+        self.assertEqual(poid.revision, 0)
+
+        poid = Poid(type='/event/pybrm', id=123)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, 123)
+        self.assertEqual(poid.revision, 0)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, 123)
+        self.assertEqual(poid.revision, 0)
+
+        poid = Poid(type='/event/pybrm', id=123, revision=1)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, 123)
+        self.assertEqual(poid.revision, 1)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.database, 1)
+        self.assertEqual(poid.type, '/event/pybrm')
+        self.assertEqual(poid.id, 123)
+        self.assertEqual(poid.revision, 1)
+
+        # Test long id
+        poid = Poid(type='/event/pybrm', id=313123319462649664, revision=1)
+        flist.PIN_FLD_POID = poid
+        poid = flist.PIN_FLD_POID
+        self.assertEqual(poid.id, 313123319462649664)
+
+        flist.PIN_FLD_POID = None
+        self.assertEqual(flist.PIN_FLD_POID, None)
+
+        del flist.PIN_FLD_POID
         self.assertRaises(KeyError, flist.__getitem__, 'PIN_FLD_POID')
 
         self.assertRaises(BRMError, flist._flist.set_poid, pin_field_of_name('PIN_FLD_POID'), value='foo')
@@ -1666,6 +1827,15 @@ class TestMisc(TestBrm):
         self.assertEqual(f['PIN_FLD_INHERITED_INFO']['PIN_FLD_POID'].type, 'b')
         self.assertRaises(ValueError, f.__setitem__, 'PIN_FLD_INHERITED_INFO', 'abc')
 
+    def test_attr(self):
+        f = self.c.flist()
+        f.PIN_FLD_POID = 'a'
+        self.assertEqual(f.PIN_FLD_POID.type, 'a')
+        f.PIN_FLD_INHERITED_INFO = {}
+        f.PIN_FLD_INHERITED_INFO.PIN_FLD_POID = 'b'
+        self.assertEqual(f.PIN_FLD_INHERITED_INFO.PIN_FLD_POID.type, 'b')
+        self.assertRaises(ValueError, f.__setattr__, 'PIN_FLD_INHERITED_INFO', 'abc')
+
     def test_list_flist(self):
         f = self.c.flist(['PIN_FLD_POID', 'PIN_FLD_STATUS'])
         self.assertIsNone(f['PIN_FLD_POID'])
@@ -1681,6 +1851,7 @@ class TestMisc(TestBrm):
         f['PIN_FLD_RESULTS'] = [{'PIN_FLD_POID': 'a'}]
         self.assertEqual(f['PIN_FLD_RESULTS'][0]['PIN_FLD_POID'].type, 'a')
         self.assertRaises(TypeError, f.__setitem__, 'PIN_FLD_RESULTS', 'abc')
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_RESULTS', 'abc')
         f['PIN_FLD_RESULTS'] = {}
         ar = f['PIN_FLD_RESULTS']
         ar[0] = {"PIN_FLD_POID": 'b'}
@@ -1715,6 +1886,27 @@ class TestMisc(TestBrm):
         self.assertEqual(len(f['PIN_FLD_RESULTS']), 2)
         self.assertEqual(f['PIN_FLD_RESULTS'][0]['PIN_FLD_POID'].type, 'zero')
         self.assertEqual(f['PIN_FLD_RESULTS']['*']['PIN_FLD_POID'].type, 'd')
+
+    def test_attr_array(self):
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = [{'PIN_FLD_POID': 'a'}]
+        self.assertEqual(f.PIN_FLD_RESULTS[0].PIN_FLD_POID.type, 'a')
+        self.assertRaises(TypeError, f.__setattr__, 'PIN_FLD_RESULTS', 'abc')
+        f.PIN_FLD_RESULTS = {}
+        ar = f.PIN_FLD_RESULTS
+        ar[0] = {}
+        ar[0].PIN_FLD_POID = 'b'
+        self.assertEquals(ar[0].PIN_FLD_POID.type, 'b')
+
+        del f.PIN_FLD_RESULTS
+        f.PIN_FLD_RESULTS = []
+        self.assertEqual(len(f), 0)
+        self.assertEqual(len(f.PIN_FLD_RESULTS), 0)
+        del f.PIN_FLD_RESULTS
+        self.assertEqual(len(f), 0)
+        f.PIN_FLD_RESULTS = {}
+        self.assertEqual(len(f), 0)
+        self.assertEqual(len(f.PIN_FLD_RESULTS), 0)
 
     def test_client_misc(self):
         pybrm.pin_err_set_level(1)
@@ -2028,8 +2220,8 @@ class TestSearch(TestBrm):
             return 1
 
         def search_build_flist(*args, **kwargs):
-            flist = _search_build_flist(*args, **kwargs)
-            flist.opcode = opcode
+            flist = Mock(_search_build_flist(*args, **kwargs))
+            flist.side_effect = opcode
             return flist
 
         c.search_build_flist = search_build_flist
@@ -2053,8 +2245,8 @@ class TestSearch(TestBrm):
             return {'PIN_FLD_RESULTS': Fake()}
 
         def search_build_flist(*args, **kwargs):
-            flist = _search_build_flist(*args, **kwargs)
-            flist.opcode = opcode
+            flist = Mock(_search_build_flist(*args, **kwargs))
+            flist.side_effect = opcode
             return flist
 
         c.search_build_flist = search_build_flist
@@ -2364,6 +2556,104 @@ class TestVirtualArray(TestBrm):
         del f['PIN_FLD_RESULTS']
         self.assertNotIn(field_num, f._virtual_arrays)
 
+    def test_attr_all(self):
+        field_num = pin_field_of_name('PIN_FLD_RESULTS')
+        f = self.c.flist()
+        self.assertFalse(f._virtual_arrays)
+        self.assertRaises(AttributeError, f.__getattr__, 'PIN_FLD_RESULTS')
+        self.assertFalse(f._virtual_arrays)
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+        self.assertIn('PIN_FLD_RESULTS', f)
+        self.assertEqual(len(f.PIN_FLD_RESULTS), 0)
+        self.assertFalse(bool(f.PIN_FLD_RESULTS))
+
+        del f.PIN_FLD_RESULTS
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        self.assertRaises(AttributeError, f.__getattr__, 'PIN_FLD_RESULTS')
+
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+        self.assertIn('PIN_FLD_RESULTS', f)
+        self.assertEqual(len(f.PIN_FLD_RESULTS), 0)
+        self.assertFalse(bool(f.PIN_FLD_RESULTS))
+
+        f.PIN_FLD_RESULTS[0] = {'PIN_FLD_STATUS': 1}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        del f.PIN_FLD_RESULTS[0]
+        self.assertIn(field_num, f._virtual_arrays)
+
+        f.PIN_FLD_RESULTS[0] = {'PIN_FLD_STATUS': 1}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        f.PIN_FLD_RESULTS[1] = {'PIN_FLD_STATUS': 2}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        del f.PIN_FLD_RESULTS[1]
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        del f.PIN_FLD_RESULTS[0]
+        self.assertIn(field_num, f._virtual_arrays)
+        self.assertTrue(f._virtual_arrays)
+
+        f.PIN_FLD_RESULTS[0] = {'PIN_FLD_STATUS': 1}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        f.PIN_FLD_RESULTS.pop(0)
+        self.assertIn(field_num, f._virtual_arrays)
+        self.assertTrue(f._virtual_arrays)
+
+        f.PIN_FLD_RESULTS[0] = {'PIN_FLD_STATUS': 1}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        f.PIN_FLD_RESULTS[1] = {'PIN_FLD_STATUS': 2}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        self.assertFalse(f._virtual_arrays)
+        f.PIN_FLD_RESULTS.clear()
+        self.assertIn(field_num, f._virtual_arrays)
+        self.assertTrue(f._virtual_arrays)
+
+        f = self.c.flist()
+        self.assertIsNone(f.get('PIN_FLD_RESULTS'))
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = {}
+        self.assertIsNotNone(f.get('PIN_FLD_RESULTS'))
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = [{'PIN_FLD_POID': 'a'}]
+        self.assertIsNotNone(f.get('PIN_FLD_RESULTS'))
+
+        f = self.c.flist()
+        self.assertRaises(AttributeError, f.__getattr__, 'PIN_FLD_RESULTS')
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = {}
+        f.PIN_FLD_RESULTS
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = [{'PIN_FLD_POID': 'a'}]
+        f.PIN_FLD_RESULTS
+
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = [{'PIN_FLD_POID': 'a'}]
+        self.assertNotIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = {0: {'PIN_FLD_POID': 'a'}}
+        self.assertNotIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = []
+        self.assertIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = None
+        self.assertNotIn(field_num, f._virtual_arrays)
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+
+        f = self.c.flist()
+        f.PIN_FLD_RESULTS = {}
+        self.assertIn(field_num, f._virtual_arrays)
+        del f.PIN_FLD_RESULTS
+        self.assertNotIn(field_num, f._virtual_arrays)
 
 if __name__ == '__main__':
     unittest.main()
